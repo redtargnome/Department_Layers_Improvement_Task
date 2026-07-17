@@ -5,9 +5,9 @@
     <session-factory>
         <!--  JDBC set up-->
         <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/testDB</property>
-        <property name="hibernate.connection.username">username</property>
-        <property name="hibernate.connection.password">password</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/testdatabase</property>
+        <property name="hibernate.connection.username">root</property>
+        <property name="hibernate.connection.password">1234</property>
 
         <!-- Dialect setup -->
         <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
@@ -15,7 +15,7 @@
         <!-- SQL Display and Formatting Settings -->
         <property name="show_sql">false</property>
         <property name="format_sql">true</property>
-        <property name="hibernate.hbm2ddl.auto">create</property>
+        <property name="hibernate.hbm2ddl.auto">update</property>
 
         <property name="hibernate.current_session_context_class">thread</property>
         <property name="hibernate.enable_lazy_load_no_trans">true</property>
@@ -23,6 +23,7 @@
         <mapping class="codefinity.model.Department"/>
         <mapping class="codefinity.model.Employee"/>
         <mapping class="codefinity.model.Role"/>
+        <mapping class="codefinity.model.Task"/>
 
     </session-factory>
 </hibernate-configuration>

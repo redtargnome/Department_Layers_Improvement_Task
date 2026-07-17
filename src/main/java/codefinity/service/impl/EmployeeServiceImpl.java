@@ -31,7 +31,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee getById(int id) {
         Employee employee = employeeDao.getById(id);
         if (employee != null) {
-            return employeeDao.getById(id);
+            return employee;
         } else {
             throw new NoSuchElementException("Can't get employee by ID " + id);
         }

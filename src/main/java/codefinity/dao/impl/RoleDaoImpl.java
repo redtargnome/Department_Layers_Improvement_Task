@@ -29,8 +29,8 @@ public class RoleDaoImpl implements RoleDao {
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
-                throw new RuntimeException("Can't add new Role", e);
             }
+            throw new HibernateException("Can't add new Role", e);
         } finally {
             if (session != null) {
                 session.close();
@@ -93,7 +93,10 @@ public class RoleDaoImpl implements RoleDao {
             session = sessionFactory.openSession();
             transaction = session.beginTransaction();
 
-            role = getById(id);
+            role = session.get(Role.class, id);
+            if (role == null) {
+                throw new NoSuchElementException("Can't get role by ID " + id);
+            }
             role.setName(newRole.getName());
             role.setDescription(newRole.getDescription());
 
@@ -103,7 +106,11 @@ public class RoleDaoImpl implements RoleDao {
             if (transaction != null) {
                 transaction.rollback();
             }
-            throw new HibernateException("Can't update the role");
+            throw new HibernateException("Can't update role " + id, e);
+        }finally {
+            if(session != null){
+                session.close();
+            }
         }
         return role;
     }

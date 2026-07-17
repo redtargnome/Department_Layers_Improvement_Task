@@ -4,10 +4,6 @@ import codefinity.dao.EmployeeDao;
 import codefinity.model.Department;
 import codefinity.model.Employee;
 import codefinity.model.Role;
-import codefinity.service.DepartmentService;
-import codefinity.service.RoleService;
-import codefinity.service.impl.DepartmentServiceImpl;
-import codefinity.service.impl.RoleServiceImpl;
 import codefinity.util.HibernateUtil;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -22,10 +18,6 @@ import java.util.NoSuchElementException;
 public class EmployeeDaoImpl implements EmployeeDao {
     private final SessionFactory sessionFactory = HibernateUtil.getSessionFactory();
 
-    private final DepartmentService departmentService = new DepartmentServiceImpl();
-
-    private final RoleService roleService = new RoleServiceImpl();
-
     @Override
     public Employee add(Employee employee) {
         Session session = null;
@@ -38,8 +30,8 @@ public class EmployeeDaoImpl implements EmployeeDao {
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
-                throw new RuntimeException("Can't add new Employee", e);
             }
+            throw new HibernateException("Can't add new Employee", e);
         } finally {
             if (session != null) {
                 session.close();
@@ -71,7 +63,7 @@ public class EmployeeDaoImpl implements EmployeeDao {
         try {
             session = sessionFactory.openSession();
 
-            String hql = "FROM Employee WHERE hireDate > :startDate AND hireDate <:endDate";
+            String hql = "FROM Employee WHERE hireDate >= :startDate AND hireDate <= :endDate";
 
             Query<Employee> query = session.createQuery(hql, Employee.class);
             query.setParameter("startDate", startDate);
@@ -79,7 +71,7 @@ public class EmployeeDaoImpl implements EmployeeDao {
 
             employees = query.getResultList();
         } catch (Exception e) {
-            System.out.println("Can't get Employees from the DB" + e);
+            throw new HibernateException("Can't get employees hired in the specified timeframe", e);
         } finally {
             if (session != null) {
                 session.close();
@@ -122,7 +114,7 @@ public class EmployeeDaoImpl implements EmployeeDao {
             query.setParameter("salary", salary);
             employees = query.getResultList();
         } catch (Exception e) {
-            System.out.println("Can't get Employees from the DB" + e);
+            throw new HibernateException("Can't get employees with salary greater than " + salary, e);
         } finally {
             if (session != null) {
                 session.close();
@@ -142,8 +134,14 @@ public class EmployeeDaoImpl implements EmployeeDao {
             session = sessionFactory.openSession();
             transaction = session.beginTransaction();
 
-            employee = getById(employeeId);
-            department = departmentService.getById(departmentId);
+            employee = session.get(Employee.class, employeeId);
+            department = session.get(Department.class, departmentId);
+            if (employee == null) {
+                throw new NoSuchElementException("Can't get employee by ID " + employeeId);
+            }
+            if (department == null) {
+                throw new NoSuchElementException("Can't get department by ID " + departmentId);
+            }
 
             employee.setDepartment(department);
             session.merge(employee);
@@ -152,6 +150,7 @@ public class EmployeeDaoImpl implements EmployeeDao {
             if (transaction != null) {
                 transaction.rollback();
             }
+            throw new HibernateException("Can't set department for employee " + employeeId, e);
         } finally {
             if (session != null) {
                 session.close();
@@ -171,8 +170,14 @@ public class EmployeeDaoImpl implements EmployeeDao {
             session = sessionFactory.openSession();
             transaction = session.beginTransaction();
 
-            employee = getById(employeeId);
-            role = roleService.getById(roleId);
+            employee = session.get(Employee.class, employeeId);
+            role = session.get(Role.class, roleId);
+            if (employee == null) {
+                throw new NoSuchElementException("Can't get employee by ID " + employeeId);
+            }
+            if (role == null) {
+                throw new NoSuchElementException("Can't get role by ID " + roleId);
+            }
 
             employee.setRole(role);
             session.merge(employee);
@@ -181,6 +186,7 @@ public class EmployeeDaoImpl implements EmployeeDao {
             if (transaction != null) {
                 transaction.rollback();
             }
+            throw new HibernateException("Can't set role for employee " + employeeId, e);
         } finally {
             if (session != null) {
                 session.close();
@@ -203,7 +209,10 @@ public class EmployeeDaoImpl implements EmployeeDao {
             session = sessionFactory.openSession();
             transaction = session.beginTransaction();
 
-            employee = getById(employeeId);
+            employee = session.get(Employee.class, employeeId);
+            if (employee == null) {
+                throw new NoSuchElementException("Can't get employee by ID " + employeeId);
+            }
             employee.setName(newEmployee.getName());
             employee.setSalary(newEmployee.getSalary());
             employee.setHireDate(newEmployee.getHireDate());
@@ -216,6 +225,7 @@ public class EmployeeDaoImpl implements EmployeeDao {
             if (transaction != null) {
                 transaction.rollback();
             }
+            throw new HibernateException("Can't update employee " + employeeId, e);
         } finally {
             if (session != null) {
                 session.close();

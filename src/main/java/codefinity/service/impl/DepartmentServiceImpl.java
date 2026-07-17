@@ -20,7 +20,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public Department getById(int id) {
         Department department = departmentDao.getById(id);
         if (department != null) {
-            return departmentDao.getById(id);
+            return department;
         } else {
             throw new NoSuchElementException("Can't get department by ID " + id);
         }
@@ -45,11 +45,17 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public Department updateDepartment(int departmentId, Department newDepartment) {
-        return null;
+
+         return departmentDao.updateDepartment(departmentId, newDepartment);
     }
 
     @Override
     public Department updateDepartmentLocation(int departmentId, String newLocation) {
-        return null;
+        if (newLocation == null) {
+            throw new NullPointerException("New department location is null");
+        }
+        Department department = getById(departmentId);
+        department.setLocation(newLocation);
+        return updateDepartment(departmentId, department);
     }
 }

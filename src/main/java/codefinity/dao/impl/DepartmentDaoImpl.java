@@ -26,8 +26,8 @@ public class DepartmentDaoImpl implements DepartmentDao {
         } catch (Exception e) {
             if (transaction != null) {
                 transaction.rollback();
-                throw new RuntimeException("Can't add new Department", e);
             }
+            throw new HibernateException("Can't add new Department", e);
         } finally {
             if (session != null) {
                 session.close();
@@ -68,7 +68,7 @@ public class DepartmentDaoImpl implements DepartmentDao {
             departments = query.getResultList();
 
         } catch (Exception e) {
-            System.out.println("Can't get departments" + e);
+            throw new HibernateException("Can't get departments", e);
         } finally {
             if (session != null) {
                 session.close();
@@ -79,6 +79,37 @@ public class DepartmentDaoImpl implements DepartmentDao {
 
     @Override
     public Department updateDepartment(int departmentId, Department newDepartment) {
-        return null;
+        Session session = null;
+        Transaction transaction = null;
+        Department department = null;
+
+        if(newDepartment==null){
+            throw new NullPointerException("Department is null");
+        }
+        try{
+            session = sessionFactory.openSession();
+            transaction = session.beginTransaction();
+            department = session.get(Department.class, departmentId);
+            if (department == null) {
+                throw new java.util.NoSuchElementException("Can't get department by ID " + departmentId);
+            }
+
+            department.setName(newDepartment.getName());
+            department.setLocation(newDepartment.getLocation());
+            session.merge(department);
+            transaction.commit();
+        }catch(Exception e){
+            if(transaction != null){
+                transaction.rollback();
+            }
+            throw new HibernateException("Cannot update department " + departmentId, e);
+        }finally{
+            if(session!=null){
+                session.close();
+            }
+        }
+
+
+        return department;
     }
 }
